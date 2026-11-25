@@ -1,0 +1,58 @@
+[package]
+name = "log-viewer"
+version = "0.1.0"
+edition = "2021"
+description = "Android logcat / log file viewer built with GPUI"
+license = "MIT"
+
+[dependencies]
+gpui = "0.2.2"
+anyhow = "1"
+regex = "1"
+dirs = "5"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+lto = "thin"
+codegen-units = 4
+strip = true
+
+[target.'cfg(windows)'.build-dependencies]
+winresource = "0.1"
+
+# Installer configuration for `cargo packager` (https://github.com/crabnebula-dev/cargo-packager)
+[package.metadata.packager]
+product-name = "Log Viewer"
+identifier = "dev.logviewer.app"
+publisher = "Log Viewer"
+authors = ["Log Viewer contributors"]
+description = "Android logcat and log file viewer"
+long-description = "A fast, GPU-accelerated log viewer: stream logcat from an Android device over ADB, open and save log files, filter by level and text/regex search. Light and dark themes."
+category = "DeveloperTool"
+homepage = "https://github.com/"
+license-file = "LICENSE"
+out-dir = "dist"
+icons = [
+    "assets/icons/32.png",
+    "assets/icons/128.png",
+    "assets/icons/256.png",
+    "assets/icons/icon.ico",
+    "assets/icons/icon.icns",
+]
+binaries = [{ path = "log-viewer", main = true }]
+before-packaging-command = "cargo build --release"
+file-associations = [
+    { extensions = ["log", "txt"], mime-type = "text/plain", description = "Log file", name = "Log file" },
+]
+
+[package.metadata.packager.nsis]
+installer-icon = "assets/icons/icon.ico"
+installer-mode = "both"
+
+[package.metadata.packager.deb]
+depends = ["libxkbcommon-x11-0", "libvulkan1", "libfontconfig1", "libwayland-client0"]
+
+# xattr 0.2.3 (pulled in by gpui) uses `libc::ENOATTR`, which current libc no longer exports on Linux.
+[patch.crates-io]
+xattr = { path = "vendor/xattr" }
